@@ -10,17 +10,15 @@ import 'package:safe_lopes_family/modules/registration/domain/entities/user_enti
 import 'package:safe_lopes_family/src/modules/circles/domain/entities/circle_entity.dart';
 
 class HomeDatasourceImp implements HomeDatasource {
-  final FirebaseAuth firebaseAuth;
-  final FirebaseDatabase firebaseDatabase;
+  late final FirebaseAuth firebaseAuth;
+  late final FirebaseDatabase firebaseDatabase;
 
-  HomeDatasourceImp(this.firebaseAuth, this.firebaseDatabase) {
-    positionStream = Geolocator.getPositionStream(
-            locationSettings:
-                const LocationSettings(accuracy: LocationAccuracy.high))
-        .listen(onLocationStreamData);
+  HomeDatasourceImp() {
+    firebaseAuth = FirebaseAuth.instance;
+    firebaseDatabase = FirebaseDatabase.instance;
   }
 
-  late StreamSubscription<Position> positionStream;
+  User? get user => firebaseAuth.currentUser;
 
   @override
   Stream<List<UserEntity>> listenCircleLocation(String circleCode) {
@@ -67,12 +65,19 @@ class HomeDatasourceImp implements HomeDatasource {
   }
 
   @override
-  Future<Either<Exception, void>> streamMyLocation(bool isStreaming) async {
+  Future<Either<Exception, void>> streamMyLocation(Position position) async {
     try {
-      if (isStreaming == true) {
-        positionStream.resume();
-      } else {
-        positionStream.pause();
+      final profile = await getUserProfile(user!.uid);
+      if (profile.circleCode != null && profile.circleCode!.isNotEmpty) {
+        DatabaseReference circlesRef = firebaseDatabase
+            .ref()
+            .child('circles')
+            .child(profile.circleCode!)
+            .child(profile.uid!);
+        await circlesRef.update({
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        });
       }
       return const Right(null);
     } on FirebaseException {
@@ -80,26 +85,12 @@ class HomeDatasourceImp implements HomeDatasource {
     }
   }
 
-  Future<void> onLocationStreamData(Position position) async {
-    final userAuth = firebaseAuth.currentUser;
-    final profile = await getUserProfile(userAuth!.uid);
-    if (profile.circleCode != null && profile.circleCode!.isNotEmpty) {
-      DatabaseReference circlesRef = firebaseDatabase
-          .ref()
-          .child('circles')
-          .child(profile.circleCode!)
-          .child(profile.uid!);
-      await circlesRef.update({
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-      });
-    }
-  }
+  Future<void> onLocationStreamData(Position position) async {}
 
   @override
   Future<Either<Exception, void>> signOut() async {
     try {
-      await FirebaseAuth.instance.signOut();
+      await firebaseAuth.signOut();
       return const Right(null);
     } on FirebaseException {
       rethrow;

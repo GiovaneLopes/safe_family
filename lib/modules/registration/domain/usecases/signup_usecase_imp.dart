@@ -10,8 +10,8 @@ class SignupUsecaseImp implements SignupUsecase {
   SignupUsecaseImp(this.signupRepository);
 
   @override
-  Future<Either<Exception, void>> call(
-      UserEntity userEntity, String password, XFile picture) async {
-    return await signupRepository(userEntity, password, picture);
+  Future<Either<Exception, void>> call(UserEntity userEntity, String password,
+      XFile picture, XFile pinImage) async {
+    return await signupRepository(userEntity, password, picture, pinImage);
   }
 }

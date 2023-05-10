@@ -10,10 +10,11 @@ class RegistrationCubit extends Cubit<RegistrationState> {
 
   UserEntity userEntity = UserEntity.empty();
 
-  Future signUp(String password, XFile picture) async {
+  Future signUp(String password, XFile picture, XFile pinImage) async {
     emit(RegistrationLoadingState());
     try {
-      final response = await signupUsecase(userEntity, password, picture);
+      final response =
+          await signupUsecase(userEntity, password, picture, pinImage);
       response.fold((l) => null, (r) => emit(RegistrationSuccessState()));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {

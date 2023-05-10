@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:safe_lopes_family/modules/auth/auth_cubit.dart';
 import 'package:safe_lopes_family/modules/auth/auth_page.dart';
@@ -13,8 +12,7 @@ class AuthModule extends Module {
         Bind.lazySingleton((i) => AuthCubit(i())),
         Bind.lazySingleton((i) => SigninUsecaseImp(i())),
         Bind.lazySingleton((i) => SigninRepositoryImp(i())),
-        Bind.lazySingleton(
-            (i) => SigninRemoteDataSourceImp(FirebaseAuth.instance)),
+        Bind.lazySingleton((i) => SigninRemoteDataSourceImp()),
       ];
 
   @override

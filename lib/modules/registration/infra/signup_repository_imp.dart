@@ -10,8 +10,9 @@ class SignupRepositoryImp implements SignupRepository {
   SignupRepositoryImp(this.signupRemoteDatasource);
 
   @override
-  Future<Either<Exception, void>> call(
-      UserEntity userEntity, String password, XFile picture) async {
-    return await signupRemoteDatasource(userEntity, password, picture);
+  Future<Either<Exception, void>> call(UserEntity userEntity, String password,
+      XFile picture, XFile pinImage) async {
+    return await signupRemoteDatasource(
+        userEntity, password, picture, pinImage);
   }
 }

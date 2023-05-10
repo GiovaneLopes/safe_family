@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:safe_lopes_family/modules/registration/domain/entities/user_entity.dart';
 import 'package:safe_lopes_family/modules/registration/registration_cubit.dart';
 import 'package:safe_lopes_family/modules/registration/widgets/camera_page.dart';
 import 'package:safe_lopes_family/src/widgets/custom_photo_marker/custom_photo_marker.dart';
@@ -96,261 +95,274 @@ class _RegistrationPageState extends State<RegistrationPage> {
           ],
         ),
       ),
-      body: SizedBox(
-        height: double.infinity,
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 22, top: 22, right: 22),
-              child: BlocConsumer(
-                bloc: registrationCubit,
-                listener: (context, state) {
-                  if (state.runtimeType == RegistrationErrorState) {
-                    var errorState = state as RegistrationErrorState;
-                    var snackBar = SnackBar(content: Text(errorState.message));
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  }
-                  if (state.runtimeType == RegistrationSuccessState) {
-                    Modular.to.popUntil((route) => route.isFirst);
-                  }
-                },
-                builder: (context, state) {
-                  return Form(
-                    key: formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CameraPage(
-                                  controller: controller,
-                                  switchCameras: () {
-                                    setState(() {
-                                      final lensDirection =
-                                          controller.description.lensDirection;
-                                      CameraDescription newDescription;
-                                      if (lensDirection ==
-                                          CameraLensDirection.front) {
-                                        newDescription = _cameras.firstWhere(
-                                            (description) =>
-                                                description.lensDirection ==
-                                                CameraLensDirection.back);
-                                      } else {
-                                        newDescription = _cameras.firstWhere(
-                                            (description) =>
-                                                description.lensDirection ==
-                                                CameraLensDirection.front);
-                                      }
-                                      controller = CameraController(
-                                          newDescription, ResolutionPreset.max);
-                                    });
-                                  },
-                                  takePicture: (file) {
-                                    setState(() {
-                                      picture = file;
-                                    });
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                          child: Stack(
-                            children: [
-                              SizedBox(
-                                height: 140,
-                                width: 140,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(200.0),
-                                  child: FittedBox(
-                                    fit: BoxFit.fitWidth,
-                                    clipBehavior: Clip.antiAlias,
-                                    child: (picture != null)
-                                        ? Image.file(
-                                            File(
-                                              picture!.path,
-                                            ),
-                                          )
-                                        : const Icon(
-                                            Icons.account_circle_outlined,
-                                            color: Colors.grey,
-                                            weight: .1,
-                                          ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 6,
-                                right: 6,
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue,
-                                    borderRadius: BorderRadius.circular(50),
-                                  ),
-                                  child: const Icon(
-                                    Icons.camera_alt_outlined,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (picture != null)
-                          WidgetsToImage(
-                            controller: widgetToImageController,
-                            child: CustomPhotoMarker(picture: picture!),
-                          ),
-                        const SizedBox(
-                          height: 22,
-                        ),
-                        SafeFamilyTextFormField(
-                          controller: nameController,
-                          keyboardType: TextInputType.text,
-                          labelText: 'Nome completo',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Campo vazio';
-                            }
-                            if (value.length < 3) {
-                              return 'Nome inválido';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        SafeFamilyTextFormField(
-                          controller: emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          obscureText: visiblePassword,
-                          labelText: 'E-mail',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Campo vazio';
-                            }
-                            if (!EmailValidator.validate(value)) {
-                              return 'E-mail inválido';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        SafeFamilyTextFormField(
-                          controller: phoneController,
-                          keyboardType: TextInputType.phone,
-                          labelText: 'Celular',
-                          inputFormatters: [phoneMask],
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Campo vazio';
-                            }
-                            if (value.length < 15) {
-                              return 'Celular inválido';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        SafeFamilyTextFormField(
-                          controller: passwordController,
-                          keyboardType: TextInputType.text,
-                          obscureText: true,
-                          maxLength: 8,
-                          labelText: 'Senha',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Campo vazio';
-                            }
-                            if (value.length < 8) {
-                              return 'Mínimo 8 dígitos';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        SafeFamilyTextFormField(
-                          controller: repeatPasswordController,
-                          keyboardType: TextInputType.text,
-                          maxLength: 8,
-                          obscureText: true,
-                          labelText: 'Repita a senha',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Campo vazio';
-                            }
-                            if (value.length < 8) {
-                              return 'Mínimo 8 dígitos';
-                            }
-                            if (passwordController.text !=
-                                repeatPasswordController.text) {
-                              return 'Repita a senha corretamente';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        Row(
+      body: Stack(
+        children: [
+          if (picture != null)
+            WidgetsToImage(
+              controller: widgetToImageController,
+              child: CustomPhotoMarker(picture: picture!),
+            ),
+          Container(
+            color: Colors.white,
+            height: double.infinity,
+            child: Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 22, top: 22, right: 22),
+                  child: BlocConsumer(
+                    bloc: registrationCubit,
+                    listener: (context, state) {
+                      if (state.runtimeType == RegistrationErrorState) {
+                        var errorState = state as RegistrationErrorState;
+                        var snackBar =
+                            SnackBar(content: Text(errorState.message));
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      }
+                      if (state.runtimeType == RegistrationSuccessState) {
+                        Modular.to.popUntil((route) => route.isFirst);
+                      }
+                    },
+                    builder: (context, state) {
+                      return Form(
+                        key: formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  if (formKey.currentState!.validate()) {
-                                    if (picture == null) {
-                                      Asuka.showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Foto de perfil obrigatória',
-                                          ),
-                                        ),
-                                      );
-                                    } else {
-                                      final widgetImage = await widgetToXFile(
-                                        CustomPhotoMarker(picture: picture!),
-                                      );
-                                      registrationCubit.userEntity =
-                                          registrationCubit.userEntity.copyWith(
-                                        name: nameController.text,
-                                        email: emailController.text,
-                                        phone: phoneController.text,
-                                        photoUrl: '',
-                                      );
-                                      await registrationCubit.signUp(
-                                          passwordController.text, widgetImage);
-                                    }
-                                  }
-                                },
-                                child: state.runtimeType ==
-                                        RegistrationLoadingState
-                                    ? const CircularProgressIndicator(
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CameraPage(
+                                      controller: controller,
+                                      switchCameras: () {
+                                        setState(() {
+                                          final lensDirection = controller
+                                              .description.lensDirection;
+                                          CameraDescription newDescription;
+                                          if (lensDirection ==
+                                              CameraLensDirection.front) {
+                                            newDescription = _cameras
+                                                .firstWhere((description) =>
+                                                    description.lensDirection ==
+                                                    CameraLensDirection.back);
+                                          } else {
+                                            newDescription = _cameras
+                                                .firstWhere((description) =>
+                                                    description.lensDirection ==
+                                                    CameraLensDirection.front);
+                                          }
+                                          controller = CameraController(
+                                              newDescription,
+                                              ResolutionPreset.max);
+                                        });
+                                      },
+                                      takePicture: (file) {
+                                        setState(() {
+                                          picture = file;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Stack(
+                                children: [
+                                  SizedBox(
+                                    height: 140,
+                                    width: 140,
+                                    child: ClipRRect(
+                                      borderRadius:
+                                          BorderRadius.circular(200.0),
+                                      child: FittedBox(
+                                        fit: BoxFit.fitWidth,
+                                        clipBehavior: Clip.antiAlias,
+                                        child: (picture != null)
+                                            ? Image.file(
+                                                File(
+                                                  picture!.path,
+                                                ),
+                                              )
+                                            : const Icon(
+                                                Icons.account_circle_outlined,
+                                                color: Colors.grey,
+                                                weight: .1,
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 6,
+                                    right: 6,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.circular(50),
+                                      ),
+                                      child: const Icon(
+                                        Icons.camera_alt_outlined,
                                         color: Colors.white,
-                                      )
-                                    : const Text('Cadastrar'),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
+                            ),
+                            const SizedBox(
+                              height: 22,
+                            ),
+                            SafeFamilyTextFormField(
+                              controller: nameController,
+                              keyboardType: TextInputType.text,
+                              labelText: 'Nome completo',
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Campo vazio';
+                                }
+                                if (value.length < 3) {
+                                  return 'Nome inválido';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(
+                              height: 16,
+                            ),
+                            SafeFamilyTextFormField(
+                              controller: emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              obscureText: visiblePassword,
+                              labelText: 'E-mail',
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Campo vazio';
+                                }
+                                if (!EmailValidator.validate(value)) {
+                                  return 'E-mail inválido';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(
+                              height: 16,
+                            ),
+                            SafeFamilyTextFormField(
+                              controller: phoneController,
+                              keyboardType: TextInputType.phone,
+                              labelText: 'Celular',
+                              inputFormatters: [phoneMask],
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Campo vazio';
+                                }
+                                if (value.length < 15) {
+                                  return 'Celular inválido';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(
+                              height: 16,
+                            ),
+                            SafeFamilyTextFormField(
+                              controller: passwordController,
+                              keyboardType: TextInputType.text,
+                              obscureText: true,
+                              maxLength: 8,
+                              labelText: 'Senha',
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Campo vazio';
+                                }
+                                if (value.length < 8) {
+                                  return 'Mínimo 8 dígitos';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(
+                              height: 16,
+                            ),
+                            SafeFamilyTextFormField(
+                              controller: repeatPasswordController,
+                              keyboardType: TextInputType.text,
+                              maxLength: 8,
+                              obscureText: true,
+                              labelText: 'Repita a senha',
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Campo vazio';
+                                }
+                                if (value.length < 8) {
+                                  return 'Mínimo 8 dígitos';
+                                }
+                                if (passwordController.text !=
+                                    repeatPasswordController.text) {
+                                  return 'Repita a senha corretamente';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(
+                              height: 16,
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      if (formKey.currentState!.validate()) {
+                                        if (picture == null) {
+                                          Asuka.showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Foto de perfil obrigatória',
+                                              ),
+                                            ),
+                                          );
+                                        } else {
+                                          final widgetImage =
+                                              await widgetToXFile(
+                                            CustomPhotoMarker(
+                                                picture: picture!),
+                                          );
+                                          registrationCubit.userEntity =
+                                              registrationCubit.userEntity
+                                                  .copyWith(
+                                            name: nameController.text,
+                                            email: emailController.text,
+                                            phone: phoneController.text,
+                                            photoUrl: '',
+                                          );
+                                          await registrationCubit.signUp(
+                                              passwordController.text,
+                                              picture!,
+                                              widgetImage);
+                                        }
+                                      }
+                                    },
+                                    child: state.runtimeType ==
+                                            RegistrationLoadingState
+                                        ? const CircularProgressIndicator(
+                                            color: Colors.white,
+                                          )
+                                        : const Text('Cadastrar'),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -360,7 +372,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
     bytes = await widgetToImageController.capture();
     final tempDir = await getTemporaryDirectory();
-    final filePath = '${tempDir.path}/temp.png';
+    final filePath = '${tempDir.path}/pin.png';
     final file = File(filePath);
     await file.writeAsBytes(bytes!);
     return XFile(filePath);

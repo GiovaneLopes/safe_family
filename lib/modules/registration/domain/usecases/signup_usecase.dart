@@ -4,5 +4,5 @@ import 'package:safe_lopes_family/modules/registration/domain/entities/user_enti
 
 abstract class SignupUsecase {
   Future<Either<Exception, void>> call(
-      UserEntity userEntity, String password, XFile picture);
+      UserEntity userEntity, String password, XFile picture, XFile pinImage);
 }

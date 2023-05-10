@@ -1,8 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:safe_lopes_family/modules/home_map/domain/usecases/listen_circle_location_usecase_imp.dart';
-import 'package:safe_lopes_family/modules/home_map/domain/usecases/sign_out_usecase.dart';
 import 'package:safe_lopes_family/modules/home_map/domain/usecases/sign_out_usecase_imp.dart';
 import 'package:safe_lopes_family/modules/home_map/domain/usecases/stream_gps_usecase_imp.dart';
 import 'package:safe_lopes_family/modules/home_map/external/home_datasource_imp.dart';
@@ -14,12 +11,14 @@ import 'package:safe_lopes_family/modules/home_map/infra/stream_gps_repository_i
 import 'package:safe_lopes_family/src/modules/circles/domain/usecases/get_circle_usecase_imp.dart';
 import 'package:safe_lopes_family/src/modules/circles/external/circle_datasource_imp.dart';
 import 'package:safe_lopes_family/src/modules/circles/infra/get_circle_repository_imp.dart';
+import 'package:safe_lopes_family/src/modules/user/domain/usecases/get_user_usecase_imp.dart';
+import 'package:safe_lopes_family/src/modules/user/external/user_datasource_imp.dart';
+import 'package:safe_lopes_family/src/modules/user/infra/get_user_respoitory_imp.dart';
 
 class HomeMapModule extends Module {
   @override
   List<Bind<Object>> get binds => [
-        Bind.lazySingleton((i) => HomeDatasourceImp(
-            FirebaseAuth.instance, FirebaseDatabase.instance)),
+        Bind.lazySingleton((i) => HomeDatasourceImp()),
         Bind.lazySingleton((i) => ListenCircleLocationUsecaseImp(i())),
         Bind.lazySingleton((i) => ListenCircleLocationRepositoryImp(i())),
         Bind.lazySingleton((i) => StreamGpsUsecaseImp(i())),
@@ -28,9 +27,11 @@ class HomeMapModule extends Module {
         Bind.lazySingleton((i) => GetCircleRepositoryImp(i())),
         Bind.lazySingleton((i) => SignOutUsecaseImp(i())),
         Bind.lazySingleton((i) => SignOutRepositoryImp(i())),
-        Bind.lazySingleton((i) => HomeMapCubit(i(), i(), i(), i())),
-        Bind.lazySingleton((i) => CircleDatasourceImp(
-            FirebaseAuth.instance, FirebaseDatabase.instance))
+        Bind.lazySingleton((i) => HomeMapCubit(i(), i(), i(), i(), i())),
+        Bind.lazySingleton((i) => CircleDatasourceImp()),
+        Bind.lazySingleton((i) => GetUserUsecaseImp(i())),
+        Bind.lazySingleton((i) => GetUserRepositoryImp(i())),
+        Bind.lazySingleton((i) => UserDatasourceImp()),
       ];
 
   @override

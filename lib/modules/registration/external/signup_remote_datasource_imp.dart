@@ -10,16 +10,19 @@ import 'package:safe_lopes_family/modules/registration/domain/entities/user_enti
 import 'package:safe_lopes_family/modules/registration/infra/signup_remote_datasource.dart';
 
 class SignupRemoteDatasourceImp implements SignupRemoteDatasource {
-  final FirebaseAuth firebaseAuth;
-  final FirebaseDatabase firebaseDatabase;
-  final FirebaseStorage firebaseStorage;
+  late final FirebaseAuth firebaseAuth;
+  late final FirebaseDatabase firebaseDatabase;
+  late final FirebaseStorage firebaseStorage;
 
-  SignupRemoteDatasourceImp(
-      this.firebaseAuth, this.firebaseDatabase, this.firebaseStorage);
+  SignupRemoteDatasourceImp() {
+    firebaseAuth = FirebaseAuth.instance;
+    firebaseDatabase = FirebaseDatabase.instance;
+    firebaseStorage = FirebaseStorage.instance;
+  }
 
   @override
-  Future<Either<Exception, void>> call(
-      UserEntity userEntity, String password, XFile picture) async {
+  Future<Either<Exception, void>> call(UserEntity userEntity, String password,
+      XFile picture, XFile pinImage) async {
     try {
       UserCredential userCredential =
           await firebaseAuth.createUserWithEmailAndPassword(
@@ -30,27 +33,27 @@ class SignupRemoteDatasourceImp implements SignupRemoteDatasource {
         await user.sendEmailVerification();
         await reloadUser();
       }
-      final photoUrl = await setUserProfilePicture(picture, userCredential);
-      await storeUserProfile(
-          userCredential, userEntity.copyWith(photoUrl: photoUrl));
+      final photoUrl =
+          await setUserProfilePicture(picture, userCredential.user!.uid);
+      final pinUrl = await setUserProfilePicture(
+          pinImage, '${userCredential.user!.uid}pin');
+      await storeUserProfile(userCredential,
+          userEntity.copyWith(photoUrl: photoUrl, pinUrl: pinUrl));
       return const Right(null);
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<String?> setUserProfilePicture(
-      XFile picture, UserCredential userCredential) async {
+  Future<String?> setUserProfilePicture(XFile picture, String fileName) async {
     try {
       final storageRef = FirebaseStorage.instance.ref();
-      final userImageRef =
-          storageRef.child('user_image/${userCredential.user!.uid}');
+      final userImageRef = storageRef.child('user_image/$fileName');
       final directory = await getApplicationDocumentsDirectory();
       final imagePath = '${directory.path}/${picture.name}';
-      picture.saveTo(imagePath);
+      await picture.saveTo(imagePath);
       File file = File(imagePath);
       await userImageRef.putFile(file);
-      storageRef.child('user_image/${picture.name}');
       return await userImageRef.getDownloadURL();
     } on FirebaseException {
       rethrow;
@@ -71,7 +74,8 @@ class SignupRemoteDatasourceImp implements SignupRemoteDatasource {
         'name': userEntity.name,
         'email': userEntity.email,
         'phone': unFormattedPhone,
-        'photo-url': userEntity.photoUrl,
+        'photoUrl': userEntity.photoUrl,
+        'pinUrl': userEntity.pinUrl,
       });
     } on FirebaseException {
       rethrow;

@@ -8,10 +8,13 @@ import 'package:safe_lopes_family/src/modules/circles/domain/entities/circle_ent
 import 'package:safe_lopes_family/src/modules/circles/infra/circle_datasource.dart';
 
 class CircleDatasourceImp implements CircleDatasource {
-  final FirebaseAuth firebaseAuth;
-  final FirebaseDatabase firebaseDatabase;
+  late final FirebaseAuth firebaseAuth;
+  late final FirebaseDatabase firebaseDatabase;
 
-  CircleDatasourceImp(this.firebaseAuth, this.firebaseDatabase);
+  CircleDatasourceImp() {
+    firebaseAuth = FirebaseAuth.instance;
+    firebaseDatabase = FirebaseDatabase.instance;
+  }
 
   @override
   Future<Either<Exception, CircleEntity>> getCircle() async {
@@ -22,6 +25,7 @@ class CircleDatasourceImp implements CircleDatasource {
         final circle = await getUserCircles(profile.circleCode!);
         return Right(circle);
       }
+
       return Right(CircleEntity.empty());
     } on FirebaseException {
       rethrow;
@@ -75,7 +79,7 @@ class CircleDatasourceImp implements CircleDatasource {
     try {
       DatabaseReference userRef =
           firebaseDatabase.ref().child('users').child(uid);
-      userRef.child('circle-code').set(code);
+      userRef.child('circleCode').set(code);
       final profile = await getUserProfile(uid);
       DatabaseReference circlesRef =
           firebaseDatabase.ref().child('circles').child(code).child(uid);
@@ -84,8 +88,9 @@ class CircleDatasourceImp implements CircleDatasource {
         'name': profile.name,
         'email': profile.email,
         'phone': profile.phone,
-        'photo-url': profile.photoUrl,
-        'circle-code': null
+        'photoUrl': profile.photoUrl,
+        'pinUrl': profile.pinUrl,
+        'circleCode': null
       });
     } on FirebaseException {
       rethrow;
