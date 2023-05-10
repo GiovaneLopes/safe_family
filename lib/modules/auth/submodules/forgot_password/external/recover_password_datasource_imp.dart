@@ -3,9 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:safe_lopes_family/modules/auth/submodules/forgot_password/infra/recover_password_datasource.dart';
 
 class RecoverPasswordDatasourceImp implements RecoverPasswordDatasource {
-  final FirebaseAuth firebaseAuth;
+  late final FirebaseAuth firebaseAuth;
 
-  RecoverPasswordDatasourceImp(this.firebaseAuth);
+  RecoverPasswordDatasourceImp() {
+    firebaseAuth = FirebaseAuth.instance;
+  }
   @override
   Future<Either<Exception, void>> call(String email) async {
     try {

@@ -22,9 +22,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
   // ignore: prefer_collection_literals
   final HomeMapCubit homeMapCubit = Modular.get();
 
-  UserEntity? selectedUser;
-  bool isStreaming = false;
-
   @override
   void initState() {
     super.initState();
@@ -71,7 +68,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
               );
             }
             var successState = state as HomeMapSuccessState;
-            print('### isStreaming: $isStreaming');
             return SizedBox(
               height: double.infinity,
               width: double.infinity,
@@ -110,9 +106,9 @@ class _HomeMapPageState extends State<HomeMapPage> {
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: (successState.users.isNotEmpty)
+                                  child: (homeMapCubit.dropdownUsers.isNotEmpty)
                                       ? DropdownButton2(
-                                          value: selectedUser,
+                                          value: homeMapCubit.selectedUser,
                                           underline: const SizedBox(),
                                           isExpanded: true,
                                           iconStyleData: const IconStyleData(
@@ -121,7 +117,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                                   .keyboard_arrow_down_outlined,
                                             ),
                                           ),
-                                          items: successState.users
+                                          items: homeMapCubit.dropdownUsers
                                               .map<
                                                   DropdownMenuItem<UserEntity>>(
                                                 (UserEntity user) =>
@@ -130,7 +126,9 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                                   value: user,
                                                   child: Row(
                                                     children: [
-                                                      (user == selectedUser)
+                                                      (user ==
+                                                              homeMapCubit
+                                                                  .selectedUser)
                                                           ? Column(
                                                               mainAxisAlignment:
                                                                   MainAxisAlignment
@@ -168,7 +166,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                               .toList(),
                                           onChanged: (value) {
                                             setState(() {
-                                              selectedUser = value;
+                                              homeMapCubit.selectedUser = value;
                                             });
                                           },
                                         )
@@ -183,12 +181,15 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                             const SizedBox(
                                               width: 12,
                                             ),
-                                            const Text(
-                                              'Safe Family',
-                                              style: TextStyle(
-                                                fontFamily: 'Nunito',
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
+                                            Expanded(
+                                              child: Text(
+                                                'Olá, ${homeMapCubit.userEntity.name}',
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontFamily: 'Nunito',
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -262,17 +263,13 @@ class _HomeMapPageState extends State<HomeMapPage> {
                     right: 16,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 38.0),
-                      child: !isStreaming
+                      child: !homeMapCubit.isGpsEnabled
                           ? FloatingActionButton(
                               heroTag: 'help',
                               backgroundColor: Colors.blue,
-                              onPressed: () {
-                                setState(() {
-                                  isStreaming = true;
-                                });
-                                homeMapCubit.initialize();
-                                homeMapCubit.myLocationStartPause(isStreaming);
-                              },
+                              onPressed: () => setState(() {
+                                homeMapCubit.switchStreamGps();
+                              }),
                               child: const Icon(
                                 Icons.play_arrow,
                                 size: 32,
@@ -282,12 +279,9 @@ class _HomeMapPageState extends State<HomeMapPage> {
                               heroTag: 'help',
                               backgroundColor:
                                   Theme.of(context).colorScheme.error,
-                              onPressed: () {
-                                setState(() {
-                                  isStreaming = false;
-                                });
-                                homeMapCubit.myLocationStartPause(isStreaming);
-                              },
+                              onPressed: () => setState(() {
+                                homeMapCubit.switchStreamGps();
+                              }),
                               child: const Icon(
                                 Icons.pause,
                                 size: 32,
@@ -295,7 +289,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                             ),
                     ),
                   ),
-                  if (successState.users.isNotEmpty)
+                  if (homeMapCubit.dropdownUsers.isNotEmpty)
                     ExpandableBottomSheet(
                       background: Container(),
                       persistentHeader: Container(
@@ -345,7 +339,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                               height: 12,
                             ),
                             Column(
-                              children: successState.users
+                              children: homeMapCubit.dropdownUsers
                                   .map(
                                     (e) => Column(
                                       children: [

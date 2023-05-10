@@ -12,32 +12,39 @@ import 'package:safe_lopes_family/modules/home_map/domain/usecases/sign_out_usec
 import 'package:safe_lopes_family/modules/home_map/domain/usecases/stream_gps_usecase.dart';
 import 'package:safe_lopes_family/modules/registration/domain/entities/user_entity.dart';
 import 'package:safe_lopes_family/src/modules/circles/domain/usecases/get_circle_usecase.dart';
+import 'package:safe_lopes_family/src/modules/user/domain/usecases/get_user_usecase.dart';
 
 class HomeMapCubit extends Cubit<HomeMapState> {
   final StreamGpsUsecase streamGpsUsecase;
   final ListenCircleLocationUsecase listenCircleLocationUsecase;
-  final GetCircleUsecase getCircleUsecase;
+  final GetCircleUsecase getCircleDataUsecase;
   final SignOutUsecase signOutUseCase;
+  final GetUserUsecase getUserUsecase;
   HomeMapCubit(this.streamGpsUsecase, this.listenCircleLocationUsecase,
-      this.getCircleUsecase, this.signOutUseCase)
+      this.getCircleDataUsecase, this.signOutUseCase, this.getUserUsecase)
       : super(HomeMapInitialState());
-
+  final Stream<Position> devicePosition = Geolocator.getPositionStream(
+    locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+  );
   late GoogleMapController? mapController;
   late String mapTheme;
+  late UserEntity userEntity;
+  late StreamSubscription<Position> devicePositionStream;
+  bool get isGpsEnabled => !devicePositionStream.isPaused;
+  UserEntity? selectedUser;
+  List<UserEntity> dropdownUsers = [];
 
   Future<void> initialize() async {
     try {
-      // Request Location Permission
-      final isLocationPermissionAllowed = await checkLocationPermission();
-      if (isLocationPermissionAllowed == true) {
-        // Stream My Location
-        await myLocationStartPause(true);
+      //Get User Entity
+      await getUserEntity();
+      // Check Location Permission
+      if (await isLocationPermissionGranted()) {
+        // Stream Device Location
+        devicePositionStream = devicePosition.listen(onLocationData);
       }
-      final circle = await getCircleUsecase();
-      // Listen Circle Users Locations
-      circle.fold((l) => null, (r) {
-        listenCircleLocationData(r.code);
-      });
+      //Get Circle
+      await getCircleData();
     } on FirebaseException catch (e) {
       emit(HomeMapErrorState(e.message ?? 'Algo deu errado'));
     } on FlutterError catch (e) {
@@ -45,44 +52,91 @@ class HomeMapCubit extends Cubit<HomeMapState> {
     }
   }
 
-  Future<bool> checkLocationPermission() async {
-    try {
-      var permission = await Geolocator.checkPermission();
-      if (permission != LocationPermission.always ||
-          permission != LocationPermission.whileInUse) {
-        await Geolocator.requestPermission();
-        permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.deniedForever) {
-          throw FlutterError('Permita a localização do dispositivo.');
-        } else if (permission == LocationPermission.denied) {
-          throw FlutterError('Permita a localização do dispositivo.');
-        }
+  Future<void> getUserEntity() async {
+    final user = await getUserUsecase();
+    user.fold((l) => null, (r) async {
+      userEntity = r;
+    });
+  }
+
+  Future<void> getCircleData() async {
+    final circle = await getCircleDataUsecase();
+    circle.fold((l) => null, (value) {
+      if (value.users.isNotEmpty && value.code.isNotEmpty) {
+        dropdownUsers = value.users;
+        // Listen Circle Users Locations
+        listenCircleLocationData(value.code);
       }
-      return true;
-    } catch (e) {
-      rethrow;
+    });
+  }
+
+  Future<void> onLocationData(Position position) async {
+    if (userEntity.circleCode != null && userEntity.circleCode!.isNotEmpty) {
+      // Stream Device Location To Circle
+      sendDeviceLocation(position);
+    } else {
+      // Show Device Location On Map
+      final markers = await buildUsersMarkers([
+        userEntity.copyWith(
+          latitude: position.latitude,
+          longitude: position.longitude,
+        )
+      ]);
+      emit(HomeMapSuccessState(markers));
     }
   }
 
   Future<void> listenCircleLocationData(String code) async {
     listenCircleLocationUsecase(code).listen((users) async {
-      Set<Marker> markers = <Marker>{};
-      await Future.wait(
-        users.map((user) async {
-          final icon = await getBytesFromUrl(user.photoUrl!, 250);
-          if (user.latitude != null && user.longitude != null) {
-            markers.add(
-              Marker(
+      final markers = await buildUsersMarkers(users);
+      emit(HomeMapSuccessState(markers));
+    });
+  }
+
+  Future<Set<Marker>> buildUsersMarkers(List<UserEntity> users) async {
+    Set<Marker> markers = <Marker>{};
+    await Future.wait(
+      users.map((user) async {
+        final icon = await getBytesFromUrl(user.pinUrl!, 250);
+        if (user.latitude != null && user.longitude != null) {
+          markers.add(
+            Marker(
                 markerId: MarkerId(user.uid!),
                 position: LatLng(user.latitude!, user.longitude!),
                 icon: icon,
-              ),
-            );
-          }
-        }).toSet(),
-      );
-      emit(HomeMapSuccessState(markers, users));
-    });
+                onTap: () {
+                  if (dropdownUsers.isNotEmpty) {
+                    selectedUser = dropdownUsers
+                        .firstWhere((element) => element.uid == user.uid);
+                  }
+                }),
+          );
+        }
+        if (selectedUser != null && selectedUser!.uid == user.uid) {
+          animateCamera(LatLng(user.latitude!, user.longitude!));
+        }
+      }).toSet(),
+    );
+    return markers;
+  }
+
+  Future<void> sendDeviceLocation(Position position) async {
+    await streamGpsUsecase(position);
+  }
+
+  void switchStreamGps() {
+    if (isGpsEnabled) {
+      devicePositionStream.pause();
+    } else {
+      devicePositionStream.resume();
+    }
+  }
+
+  Future<void> signOut() async {
+    // Stop Streaming Device Location
+    await devicePositionStream.cancel();
+    // Sign out
+    await signOutUseCase();
   }
 
   Future<BitmapDescriptor> getBytesFromUrl(String url, int width) async {
@@ -94,18 +148,6 @@ class HomeMapCubit extends Cubit<HomeMapState> {
         .buffer
         .asUint8List();
     return BitmapDescriptor.fromBytes(bytes);
-  }
-
-  Future<void> myLocationStartPause(bool newStreamingValue) async {
-    print('### newValue: $newStreamingValue');
-    await streamGpsUsecase(newStreamingValue);
-  }
-
-  Future<void> signOut() async {
-    // Stop Streaming My Location
-    await myLocationStartPause(false);
-    // Sign out
-    await signOutUseCase();
   }
 
   onMapCreated(GoogleMapController controller) {
@@ -123,6 +165,25 @@ class HomeMapCubit extends Cubit<HomeMapState> {
     );
     mapController!.animateCamera(CameraUpdate.newCameraPosition(position));
   }
+
+  Future<bool> isLocationPermissionGranted() async {
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.always ||
+          permission != LocationPermission.whileInUse) {
+        await Geolocator.requestPermission();
+        permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.deniedForever) {
+          throw FlutterError('Permita a localização do dispositivo.');
+        } else if (permission == LocationPermission.denied) {
+          throw FlutterError('Permita a localização do dispositivo.');
+        }
+      }
+      return true;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
 
 abstract class HomeMapState {}
@@ -133,9 +194,8 @@ class HomeMapInitialState extends HomeMapState {}
 
 class HomeMapSuccessState extends HomeMapState {
   final Set<Marker> markers;
-  final List<UserEntity> users;
 
-  HomeMapSuccessState(this.markers, this.users);
+  HomeMapSuccessState(this.markers);
 }
 
 class HomeMapErrorState extends HomeMapState {

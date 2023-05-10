@@ -3,9 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:safe_lopes_family/modules/registration/submodules/email_verification/infra/email_verification_datasource.dart';
 
 class EmailVerificationDatasourceImp implements EmailVerificationDatasource {
-  final FirebaseAuth firebaseAuth;
+  late final FirebaseAuth firebaseAuth;
 
-  EmailVerificationDatasourceImp(this.firebaseAuth);
+  EmailVerificationDatasourceImp() {
+    firebaseAuth = FirebaseAuth.instance;
+  }
 
   @override
   Future<Either<Exception, void>> emailVerification() async {

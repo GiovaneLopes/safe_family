@@ -1,5 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:safe_lopes_family/modules/circles/circles_cubit.dart';
 import 'package:safe_lopes_family/modules/circles/circles_page.dart';
@@ -16,8 +14,7 @@ class CirclesModule extends Module {
         Bind.lazySingleton((i) => CirclesCubit(i(), i())),
         Bind.lazySingleton((i) => GetCircleUsecaseImp(i())),
         Bind.lazySingleton((i) => GetCircleRepositoryImp(i())),
-        Bind.lazySingleton((i) => CircleDatasourceImp(
-            FirebaseAuth.instance, FirebaseDatabase.instance)),
+        Bind.lazySingleton((i) => CircleDatasourceImp()),
         Bind.lazySingleton((i) => SetCircleUsecaseImp(i())),
         Bind.lazySingleton((i) => SetCircleRepositoryImp(i())),
       ];

@@ -7,6 +7,7 @@ class UserEntity {
   final String? circleCode;
   final String phone;
   final String? photoUrl;
+  final String? pinUrl;
   final double? latitude;
   final double? longitude;
 
@@ -17,6 +18,7 @@ class UserEntity {
     this.circleCode,
     required this.phone,
     required this.photoUrl,
+    this.pinUrl,
     this.latitude,
     this.longitude,
   });
@@ -28,6 +30,7 @@ class UserEntity {
     String? circleCode,
     String? phone,
     String? photoUrl,
+    String? pinUrl,
     double? latitude,
     double? longitude,
   }) {
@@ -38,6 +41,7 @@ class UserEntity {
       circleCode: circleCode ?? this.circleCode,
       phone: phone ?? this.phone,
       photoUrl: photoUrl ?? this.photoUrl,
+      pinUrl: pinUrl ?? this.pinUrl,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
     );
@@ -48,9 +52,10 @@ class UserEntity {
       'uid': uid,
       'name': name,
       'email': email,
-      'circle-code': circleCode,
+      'circleCode': circleCode,
       'phone': phone,
       'photoUrl': photoUrl,
+      'pinUrl': pinUrl,
       'latitude': latitude,
       'longitude': longitude,
     };
@@ -61,11 +66,12 @@ class UserEntity {
       uid: map['uid'],
       name: map['name'] ?? '',
       email: map['email'] ?? '',
-      circleCode: map['circle-code'],
+      circleCode: map['circleCode'],
       phone: map['phone'] ?? '',
-      photoUrl: map['photo-url'] ?? '',
-      latitude: map['latitude'] ?? 0,
-      longitude: map['longitude'] ?? 0,
+      photoUrl: map['photoUrl'],
+      pinUrl: map['pinUrl'],
+      latitude: map['latitude']?.toDouble(),
+      longitude: map['longitude']?.toDouble(),
     );
   }
 
@@ -77,6 +83,7 @@ class UserEntity {
       circleCode: '',
       phone: '',
       photoUrl: '',
+      pinUrl: '',
     );
   }
 
@@ -87,7 +94,7 @@ class UserEntity {
 
   @override
   String toString() {
-    return 'UserEntity(uid: $uid, name: $name, email: $email, circleCode: $circleCode, phone: $phone, photoUrl: $photoUrl)';
+    return 'UserEntity(uid: $uid, name: $name, email: $email, circleCode: $circleCode, phone: $phone, photoUrl: $photoUrl, pinUrl: $pinUrl, latitude: $latitude, longitude: $longitude)';
   }
 
   @override
@@ -101,6 +108,7 @@ class UserEntity {
         other.circleCode == circleCode &&
         other.phone == phone &&
         other.photoUrl == photoUrl &&
+        other.pinUrl == pinUrl &&
         other.latitude == latitude &&
         other.longitude == longitude;
   }
@@ -113,6 +121,7 @@ class UserEntity {
         circleCode.hashCode ^
         phone.hashCode ^
         photoUrl.hashCode ^
+        pinUrl.hashCode ^
         latitude.hashCode ^
         longitude.hashCode;
   }

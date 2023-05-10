@@ -3,9 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:safe_lopes_family/modules/auth/infra/signin_remote_datasource.dart';
 
 class SigninRemoteDataSourceImp implements SigninRemoteDataSource {
-  final FirebaseAuth firebaseAuth;
+  late final FirebaseAuth firebaseAuth;
 
-  SigninRemoteDataSourceImp(this.firebaseAuth);
+  SigninRemoteDataSourceImp() {
+    firebaseAuth = FirebaseAuth.instance;
+  }
 
   @override
   Future<Either<Exception, void>> call(String email, String password) async {

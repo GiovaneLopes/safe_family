@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 
 class FirebaseAuthenticationService {
-  late FirebaseAuth _firebaseAuth;
+  late final FirebaseAuth _firebaseAuth;
   FirebaseAuthenticationService() {
     _initialize();
     _userChangesHandler();

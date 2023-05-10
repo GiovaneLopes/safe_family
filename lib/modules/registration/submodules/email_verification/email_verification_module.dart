@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:safe_lopes_family/modules/registration/submodules/email_verification/domain/usecases/email_verification_usecase_imp.dart';
 import 'package:safe_lopes_family/modules/registration/submodules/email_verification/domain/usecases/resend_email_verification_usecase_imp.dart';
@@ -14,8 +13,7 @@ class EmailVerificationModule extends Module {
         Bind.lazySingleton((i) => EmailVerificationCubit(i(), i())),
         Bind.lazySingleton((i) => EmailVerificationUsecaseImp(i())),
         Bind.lazySingleton((i) => EmailVerificationRepositoryImp(i())),
-        Bind.lazySingleton(
-            (i) => EmailVerificationDatasourceImp(FirebaseAuth.instance)),
+        Bind.lazySingleton((i) => EmailVerificationDatasourceImp()),
         Bind.lazySingleton((i) => ResendVerificationEmailUsecaseImp(i())),
         Bind.lazySingleton((i) => ResendEmailVerificationRepositoryImp(i())),
       ];
