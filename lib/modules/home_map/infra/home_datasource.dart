@@ -6,4 +6,5 @@ abstract class HomeDatasource {
   Stream<List<UserEntity>> listenCircleLocation(String circleCode);
   Future<Either<Exception, void>> streamMyLocation(Position position);
   Future<Either<Exception, void>> signOut();
+  Future<Either<Exception, void>> streamDeviceBatteryLevel(int batteryLevel);
 }

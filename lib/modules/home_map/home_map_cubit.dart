@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,8 +8,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:battery_info/battery_info_plugin.dart';
+import 'package:battery_info/model/android_battery_info.dart';
+import 'package:battery_info/model/iso_battery_info.dart';
 import 'package:safe_lopes_family/modules/home_map/domain/usecases/listen_circle_location_usecase.dart';
 import 'package:safe_lopes_family/modules/home_map/domain/usecases/sign_out_usecase.dart';
+import 'package:safe_lopes_family/modules/home_map/domain/usecases/stream_device_battery_usecase_imp.dart';
 import 'package:safe_lopes_family/modules/home_map/domain/usecases/stream_gps_usecase.dart';
 import 'package:safe_lopes_family/modules/registration/domain/entities/user_entity.dart';
 import 'package:safe_lopes_family/src/modules/circles/domain/usecases/get_circle_usecase.dart';
@@ -20,8 +25,14 @@ class HomeMapCubit extends Cubit<HomeMapState> {
   final GetCircleUsecase getCircleDataUsecase;
   final SignOutUsecase signOutUseCase;
   final GetUserUsecase getUserUsecase;
-  HomeMapCubit(this.streamGpsUsecase, this.listenCircleLocationUsecase,
-      this.getCircleDataUsecase, this.signOutUseCase, this.getUserUsecase)
+  final StreamDeviceBatteryUsecaseImp streamDeviceBatteryUsecaseImp;
+  HomeMapCubit(
+      this.streamGpsUsecase,
+      this.listenCircleLocationUsecase,
+      this.getCircleDataUsecase,
+      this.signOutUseCase,
+      this.getUserUsecase,
+      this.streamDeviceBatteryUsecaseImp)
       : super(HomeMapInitialState());
   final Stream<Position> devicePosition = Geolocator.getPositionStream(
     locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
@@ -29,8 +40,7 @@ class HomeMapCubit extends Cubit<HomeMapState> {
   late GoogleMapController? mapController;
   late String mapTheme;
   late UserEntity userEntity;
-  late StreamSubscription<Position> devicePositionStream;
-  bool get isGpsEnabled => !devicePositionStream.isPaused;
+  late StreamSubscription<Position>? devicePositionStream;
   UserEntity? selectedUser;
   List<UserEntity> dropdownUsers = [];
 
@@ -38,13 +48,15 @@ class HomeMapCubit extends Cubit<HomeMapState> {
     try {
       //Get User Entity
       await getUserEntity();
+      //Get Circle Data
+      await getCircleData();
       // Check Location Permission
       if (await isLocationPermissionGranted()) {
         // Stream Device Location
         devicePositionStream = devicePosition.listen(onLocationData);
       }
-      //Get Circle
-      await getCircleData();
+      // Battery level
+      listenDeviceBatteryLevel();
     } on FirebaseException catch (e) {
       emit(HomeMapErrorState(e.message ?? 'Algo deu errado'));
     } on FlutterError catch (e) {
@@ -82,14 +94,58 @@ class HomeMapCubit extends Cubit<HomeMapState> {
           longitude: position.longitude,
         )
       ]);
-      emit(HomeMapSuccessState(markers));
+      emit(HomeMapSuccessState(markers, [userEntity]));
+    }
+  }
+
+  void listenDeviceBatteryLevel() async {
+    if (Platform.isAndroid) {
+      BatteryInfoPlugin()
+          .androidBatteryInfoStream
+          .listen(listenAndroidBatteryLevel);
+    } else if (Platform.isIOS) {
+      BatteryInfoPlugin().iosBatteryInfoStream.listen(listenIOSdBatteryLevel);
+    }
+  }
+
+  Future<void> listenAndroidBatteryLevel(AndroidBatteryInfo? event) async {
+    if (userEntity.circleCode != null && userEntity.circleCode!.isNotEmpty) {
+      // Stream Device Battery Level
+      if (event != null) {
+        sendDeviceBatteryLevel(event.batteryLevel ?? 0);
+      }
+    } else {
+      // Show Device Battery
+
+      if (event != null) {
+        final markers = await buildUsersMarkers(
+            [userEntity = userEntity.copyWith(battery: event.batteryLevel)]);
+        emit(HomeMapSuccessState(markers, [userEntity]));
+      }
+    }
+  }
+
+  Future<void> listenIOSdBatteryLevel(IosBatteryInfo? event) async {
+    if (userEntity.circleCode != null && userEntity.circleCode!.isNotEmpty) {
+      // Stream Device Battery Level
+      if (event != null) {
+        sendDeviceBatteryLevel(event.batteryLevel ?? 0);
+      }
+    } else {
+      // Show Device Battery
+
+      if (event != null) {
+        final markers = await buildUsersMarkers(
+            [userEntity = userEntity.copyWith(battery: event.batteryLevel)]);
+        emit(HomeMapSuccessState(markers, [userEntity]));
+      }
     }
   }
 
   Future<void> listenCircleLocationData(String code) async {
     listenCircleLocationUsecase(code).listen((users) async {
       final markers = await buildUsersMarkers(users);
-      emit(HomeMapSuccessState(markers));
+      emit(HomeMapSuccessState(markers, users));
     });
   }
 
@@ -120,21 +176,29 @@ class HomeMapCubit extends Cubit<HomeMapState> {
     return markers;
   }
 
+  Future<void> sendDeviceBatteryLevel(int batteryLevel) async {
+    await streamDeviceBatteryUsecaseImp(batteryLevel);
+  }
+
   Future<void> sendDeviceLocation(Position position) async {
     await streamGpsUsecase(position);
   }
 
   void switchStreamGps() {
-    if (isGpsEnabled) {
-      devicePositionStream.pause();
-    } else {
-      devicePositionStream.resume();
+    if (devicePositionStream != null) {
+      if (devicePositionStream!.isPaused) {
+        devicePositionStream!.pause();
+      } else {
+        devicePositionStream!.resume();
+      }
     }
   }
 
   Future<void> signOut() async {
-    // Stop Streaming Device Location
-    await devicePositionStream.cancel();
+    if (devicePositionStream != null) {
+      // Stop Streaming Device Location
+      await devicePositionStream!.cancel();
+    }
     // Sign out
     await signOutUseCase();
   }
@@ -194,8 +258,9 @@ class HomeMapInitialState extends HomeMapState {}
 
 class HomeMapSuccessState extends HomeMapState {
   final Set<Marker> markers;
+  final List<UserEntity> users;
 
-  HomeMapSuccessState(this.markers);
+  HomeMapSuccessState(this.markers, this.users);
 }
 
 class HomeMapErrorState extends HomeMapState {

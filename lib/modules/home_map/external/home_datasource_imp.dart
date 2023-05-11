@@ -85,12 +85,29 @@ class HomeDatasourceImp implements HomeDatasource {
     }
   }
 
-  Future<void> onLocationStreamData(Position position) async {}
-
   @override
   Future<Either<Exception, void>> signOut() async {
     try {
       await firebaseAuth.signOut();
+      return const Right(null);
+    } on FirebaseException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Either<Exception, void>> streamDeviceBatteryLevel(
+      int batteryLevel) async {
+    try {
+      final profile = await getUserProfile(user!.uid);
+      if (profile.circleCode != null && profile.circleCode!.isNotEmpty) {
+        DatabaseReference circlesRef = firebaseDatabase
+            .ref()
+            .child('circles')
+            .child(profile.circleCode!)
+            .child(profile.uid!);
+        await circlesRef.update({'battery': batteryLevel});
+      }
       return const Right(null);
     } on FirebaseException {
       rethrow;
