@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:feather_icons/feather_icons.dart';
 import 'package:safe_lopes_family/modules/registration/domain/entities/user_entity.dart';
 import 'package:safe_lopes_family/modules/home_map/home_map_cubit.dart';
 import 'package:safe_lopes_family/src/resources/images.dart';
@@ -263,7 +264,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                     right: 16,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 38.0),
-                      child: !homeMapCubit.isGpsEnabled
+                      child: !homeMapCubit.devicePositionStream!.isPaused
                           ? FloatingActionButton(
                               heroTag: 'help',
                               backgroundColor: Colors.blue,
@@ -339,7 +340,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                               height: 12,
                             ),
                             Column(
-                              children: homeMapCubit.dropdownUsers
+                              children: successState.users
                                   .map(
                                     (e) => Column(
                                       children: [
@@ -394,60 +395,119 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                               const SizedBox(
                                                 width: 16,
                                               ),
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    e.name,
-                                                    style: const TextStyle(
-                                                      fontFamily: 'Nunito',
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Text(
+                                                          e.name,
+                                                          style:
+                                                              const TextStyle(
+                                                            fontFamily:
+                                                                'Nunito',
+                                                            fontSize: 18,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            if (e.battery !=
+                                                                null)
+                                                              Row(
+                                                                children: [
+                                                                  Icon(
+                                                                    FeatherIcons
+                                                                        .batteryCharging,
+                                                                    size: 15,
+                                                                    color: (e
+                                                                                .battery! <=
+                                                                            15)
+                                                                        ? Colors
+                                                                            .red
+                                                                        : Colors
+                                                                            .black,
+                                                                  ),
+                                                                  const SizedBox(
+                                                                    width: 6,
+                                                                  ),
+                                                                  Text(
+                                                                    '${e.battery.toString()} %',
+                                                                    style:
+                                                                        TextStyle(
+                                                                      fontFamily:
+                                                                          'Nunito',
+                                                                      fontSize:
+                                                                          12,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      color: (e.battery! <=
+                                                                              15)
+                                                                          ? Colors
+                                                                              .red
+                                                                          : Colors
+                                                                              .black,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ),
-                                                  Row(
-                                                    children: const [
-                                                      Text(
-                                                        'Últ. local.: ',
-                                                        style: TextStyle(
-                                                          fontFamily: 'Nunito',
-                                                          fontSize: 12,
+                                                    Row(
+                                                      children: const [
+                                                        Text(
+                                                          'Últ. local.: ',
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                'Nunito',
+                                                            fontSize: 12,
+                                                          ),
                                                         ),
-                                                      ),
-                                                      Text(
-                                                        'Av Assis Ribeiro, nº 3000',
-                                                        style: TextStyle(
-                                                          fontFamily: 'Nunito',
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.bold,
+                                                        Text(
+                                                          'Av Assis Ribeiro, nº 3000',
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                'Nunito',
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                    children: const [
-                                                      Text(
-                                                        'Desde: ',
-                                                        style: TextStyle(
-                                                          fontFamily: 'Nunito',
-                                                          fontSize: 12,
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      children: const [
+                                                        Text(
+                                                          'Desde: ',
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                'Nunito',
+                                                            fontSize: 12,
+                                                          ),
                                                         ),
-                                                      ),
-                                                      Text(
-                                                        ' 12:00',
-                                                        style: TextStyle(
-                                                          fontFamily: 'Nunito',
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.bold,
+                                                        Text(
+                                                          ' 12:00',
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                'Nunito',
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                               const Divider(
                                                 thickness: 5,

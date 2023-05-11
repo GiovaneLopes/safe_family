@@ -10,6 +10,7 @@ class UserEntity {
   final String? pinUrl;
   final double? latitude;
   final double? longitude;
+  final int? battery;
 
   UserEntity({
     this.uid,
@@ -21,6 +22,7 @@ class UserEntity {
     this.pinUrl,
     this.latitude,
     this.longitude,
+    this.battery,
   });
 
   UserEntity copyWith({
@@ -33,6 +35,7 @@ class UserEntity {
     String? pinUrl,
     double? latitude,
     double? longitude,
+    int? battery,
   }) {
     return UserEntity(
       uid: uid ?? this.uid,
@@ -44,6 +47,7 @@ class UserEntity {
       pinUrl: pinUrl ?? this.pinUrl,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      battery: battery ?? this.battery,
     );
   }
 
@@ -58,6 +62,7 @@ class UserEntity {
       'pinUrl': pinUrl,
       'latitude': latitude,
       'longitude': longitude,
+      'battery': battery,
     };
   }
 
@@ -72,6 +77,7 @@ class UserEntity {
       pinUrl: map['pinUrl'],
       latitude: map['latitude']?.toDouble(),
       longitude: map['longitude']?.toDouble(),
+      battery: map['battery']?.toInt(),
     );
   }
 
@@ -94,7 +100,7 @@ class UserEntity {
 
   @override
   String toString() {
-    return 'UserEntity(uid: $uid, name: $name, email: $email, circleCode: $circleCode, phone: $phone, photoUrl: $photoUrl, pinUrl: $pinUrl, latitude: $latitude, longitude: $longitude)';
+    return 'UserEntity(uid: $uid, name: $name, email: $email, circleCode: $circleCode, phone: $phone, photoUrl: $photoUrl, pinUrl: $pinUrl, latitude: $latitude, longitude: $longitude, battery: $battery)';
   }
 
   @override
@@ -110,7 +116,8 @@ class UserEntity {
         other.photoUrl == photoUrl &&
         other.pinUrl == pinUrl &&
         other.latitude == latitude &&
-        other.longitude == longitude;
+        other.longitude == longitude &&
+        other.battery == battery;
   }
 
   @override
@@ -123,6 +130,7 @@ class UserEntity {
         photoUrl.hashCode ^
         pinUrl.hashCode ^
         latitude.hashCode ^
-        longitude.hashCode;
+        longitude.hashCode ^
+        battery.hashCode;
   }
 }
