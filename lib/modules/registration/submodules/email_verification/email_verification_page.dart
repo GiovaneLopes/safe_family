@@ -22,9 +22,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Text(
               'Verificar email',
               style: TextStyle(fontSize: 22, fontFamily: 'Nunito'),
@@ -89,9 +89,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                               onPressed: () async {
                                 await emailVerificationCubit.reloadUser();
                               },
-                              child: Row(
+                              child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
+                                children: [
                                   Text('Email verificado'),
                                   SizedBox(width: 12),
                                   Icon(Icons.arrow_forward),
@@ -109,11 +109,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () async {
-                                await emailVerificationCubit.resendVerificationEmail();
+                                await emailVerificationCubit
+                                    .resendVerificationEmail();
                               },
-                              child: Row(
+                              child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
+                                children: [
                                   Icon(FeatherIcons.mail),
                                   SizedBox(width: 12),
                                   Text('Reenviar email'),

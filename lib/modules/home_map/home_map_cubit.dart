@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,6 +17,7 @@ import 'package:safe_lopes_family/modules/home_map/domain/usecases/sign_out_usec
 import 'package:safe_lopes_family/modules/home_map/domain/usecases/stream_device_battery_usecase_imp.dart';
 import 'package:safe_lopes_family/modules/home_map/domain/usecases/stream_gps_usecase.dart';
 import 'package:safe_lopes_family/modules/registration/domain/entities/user_entity.dart';
+import 'package:safe_lopes_family/src/modules/circles/domain/entities/circle_entity.dart';
 import 'package:safe_lopes_family/src/modules/circles/domain/usecases/get_circle_usecase.dart';
 import 'package:safe_lopes_family/src/modules/user/domain/usecases/get_user_usecase.dart';
 
@@ -40,23 +42,37 @@ class HomeMapCubit extends Cubit<HomeMapState> {
   late GoogleMapController? mapController;
   late String mapTheme;
   late UserEntity userEntity;
-  late StreamSubscription<Position>? devicePositionStream;
+  StreamSubscription<Position>? devicePositionStream;
   UserEntity? selectedUser;
   List<UserEntity> dropdownUsers = [];
+  bool isStreamingLocation = false;
+  late Set<Marker> markers = <Marker>{};
+  late List<UserEntity> users;
 
   Future<void> initialize() async {
     try {
       //Get User Entity
-      await getUserEntity();
+      final response = await getUserEntity();
+      response.fold((l) => emit(HomeMapErrorState('Erro do servidor')),
+          (r) async {
+        userEntity = r;
+        users = [userEntity];
+      });
+
       //Get Circle Data
-      await getCircleData();
-      // Check Location Permission
-      if (await isLocationPermissionGranted()) {
-        // Stream Device Location
-        devicePositionStream = devicePosition.listen(onLocationData);
-      }
-      // Battery level
-      listenDeviceBatteryLevel();
+      final circleResponse = await getCircleData();
+      circleResponse.fold((l) => emit(HomeMapErrorState('Erro do servidor')),
+          (value) {
+        if (value.users.isNotEmpty && value.code.isNotEmpty) {
+          dropdownUsers = value.users;
+          // Listen Circle Users Locations
+          listenCircleLocationData(value.code);
+          // Battery level
+          listenDeviceBatteryLevel();
+        } else {
+          emit(HomeMapSuccessState(markers, users, isStreamingLocation));
+        }
+      });
     } on FirebaseException catch (e) {
       emit(HomeMapErrorState(e.message ?? 'Algo deu errado'));
     } on FlutterError catch (e) {
@@ -64,22 +80,12 @@ class HomeMapCubit extends Cubit<HomeMapState> {
     }
   }
 
-  Future<void> getUserEntity() async {
-    final user = await getUserUsecase();
-    user.fold((l) => null, (r) async {
-      userEntity = r;
-    });
+  Future<Either<Exception, UserEntity>> getUserEntity() async {
+    return await getUserUsecase();
   }
 
-  Future<void> getCircleData() async {
-    final circle = await getCircleDataUsecase();
-    circle.fold((l) => null, (value) {
-      if (value.users.isNotEmpty && value.code.isNotEmpty) {
-        dropdownUsers = value.users;
-        // Listen Circle Users Locations
-        listenCircleLocationData(value.code);
-      }
-    });
+  Future<Either<Exception, CircleEntity>> getCircleData() async {
+    return await getCircleDataUsecase();
   }
 
   Future<void> onLocationData(Position position) async {
@@ -88,13 +94,14 @@ class HomeMapCubit extends Cubit<HomeMapState> {
       sendDeviceLocation(position);
     } else {
       // Show Device Location On Map
-      final markers = await buildUsersMarkers([
+      markers = await buildUsersMarkers([
         userEntity.copyWith(
           latitude: position.latitude,
           longitude: position.longitude,
         )
       ]);
-      emit(HomeMapSuccessState(markers, [userEntity]));
+      users = [userEntity];
+      emit(HomeMapSuccessState(markers, users, isStreamingLocation));
     }
   }
 
@@ -116,11 +123,11 @@ class HomeMapCubit extends Cubit<HomeMapState> {
       }
     } else {
       // Show Device Battery
-
       if (event != null) {
-        final markers = await buildUsersMarkers(
+        markers = await buildUsersMarkers(
             [userEntity = userEntity.copyWith(battery: event.batteryLevel)]);
-        emit(HomeMapSuccessState(markers, [userEntity]));
+        users = [userEntity];
+        emit(HomeMapSuccessState(markers, users, isStreamingLocation));
       }
     }
   }
@@ -133,19 +140,20 @@ class HomeMapCubit extends Cubit<HomeMapState> {
       }
     } else {
       // Show Device Battery
-
       if (event != null) {
-        final markers = await buildUsersMarkers(
+        markers = await buildUsersMarkers(
             [userEntity = userEntity.copyWith(battery: event.batteryLevel)]);
-        emit(HomeMapSuccessState(markers, [userEntity]));
+        users = [userEntity];
+        emit(HomeMapSuccessState(markers, users, isStreamingLocation));
       }
     }
   }
 
   Future<void> listenCircleLocationData(String code) async {
-    listenCircleLocationUsecase(code).listen((users) async {
-      final markers = await buildUsersMarkers(users);
-      emit(HomeMapSuccessState(markers, users));
+    listenCircleLocationUsecase(code).listen((list) async {
+      markers = await buildUsersMarkers(list);
+      users = list;
+      emit(HomeMapSuccessState(markers, users, isStreamingLocation));
     });
   }
 
@@ -169,7 +177,7 @@ class HomeMapCubit extends Cubit<HomeMapState> {
           );
         }
         if (selectedUser != null && selectedUser!.uid == user.uid) {
-          animateCamera(LatLng(user.latitude!, user.longitude!));
+          animateCameraSelectedUser(user);
         }
       }).toSet(),
     );
@@ -181,17 +189,35 @@ class HomeMapCubit extends Cubit<HomeMapState> {
   }
 
   Future<void> sendDeviceLocation(Position position) async {
+    // Stream Device Location
     await streamGpsUsecase(position);
   }
 
-  void switchStreamGps() {
+  Future<void> startPauseGps() async {
     if (devicePositionStream != null) {
       if (devicePositionStream!.isPaused) {
-        devicePositionStream!.pause();
-      } else {
+        isStreamingLocation = true;
         devicePositionStream!.resume();
+      } else {
+        isStreamingLocation = false;
+        devicePositionStream!.pause();
+        emit(HomeMapSuccessState(markers, users, isStreamingLocation));
+      }
+    } else {
+      // Check Location Permission
+      if (await isLocationPermissionGranted()) {
+        // Stream Device Location
+        devicePositionStream = devicePosition.listen(onLocationData);
+        isStreamingLocation = true;
       }
     }
+  }
+
+  void animateCameraSelectedUser(UserEntity user) async {
+    if (user.latitude != null && user.longitude != null) {}
+    final position =
+        CameraPosition(target: LatLng(user.latitude!, user.longitude!));
+    mapController!.animateCamera(CameraUpdate.newCameraPosition(position));
   }
 
   Future<void> signOut() async {
@@ -220,14 +246,6 @@ class HomeMapCubit extends Cubit<HomeMapState> {
     if (hour > 18 || hour < 6) {
       controller.setMapStyle(mapTheme);
     }
-  }
-
-  animateCamera(LatLng latlng) {
-    final position = CameraPosition(
-      target: latlng,
-      zoom: 15,
-    );
-    mapController!.animateCamera(CameraUpdate.newCameraPosition(position));
   }
 
   Future<bool> isLocationPermissionGranted() async {
@@ -259,8 +277,9 @@ class HomeMapInitialState extends HomeMapState {}
 class HomeMapSuccessState extends HomeMapState {
   final Set<Marker> markers;
   final List<UserEntity> users;
+  final bool isStreamingLocation;
 
-  HomeMapSuccessState(this.markers, this.users);
+  HomeMapSuccessState(this.markers, this.users, this.isStreamingLocation);
 }
 
 class HomeMapErrorState extends HomeMapState {

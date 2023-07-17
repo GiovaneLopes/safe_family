@@ -16,9 +16,9 @@ class NewCircle extends StatelessWidget {
           onPressed: () => Modular.to.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
+          children: [
             SizedBox(),
             Text(
               'Novo círculo',
@@ -53,8 +53,8 @@ class NewCircle extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: const [
+                      const Row(
+                        children: [
                           Expanded(
                             child: Text(
                               'Círculo criado',

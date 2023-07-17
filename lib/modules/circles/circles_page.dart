@@ -34,9 +34,9 @@ class _CirclesPageState extends State<CirclesPage> {
           onPressed: () => Modular.to.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
+          children: [
             SizedBox(),
             Text(
               'Circulos',
@@ -85,8 +85,8 @@ class _CirclesPageState extends State<CirclesPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Icon(
                                 Icons.key,
                                 color: Colors.blue,
@@ -155,8 +155,8 @@ class _CirclesPageState extends State<CirclesPage> {
                       const SizedBox(
                         height: 16,
                       ),
-                      Row(
-                        children: const [
+                      const Row(
+                        children: [
                           Icon(
                             Icons.person,
                             color: Colors.blue,
@@ -289,8 +289,8 @@ class _CirclesPageState extends State<CirclesPage> {
                     const SizedBox(
                       height: 22,
                     ),
-                    Row(
-                      children: const [
+                    const Row(
+                      children: [
                         Expanded(
                           child: Text(
                             'Insira o código do círculo que deseja fazer parte',
@@ -368,9 +368,9 @@ class _CirclesPageState extends State<CirclesPage> {
                     ),
                     InkWell(
                       onTap: () => Modular.to.pushNamed('/circles/new-circle'),
-                      child: Row(
+                      child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             Text(
                               'Criar novo círculo',
                               style: TextStyle(

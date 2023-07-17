@@ -166,9 +166,20 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                               )
                                               .toList(),
                                           onChanged: (value) {
-                                            setState(() {
-                                              homeMapCubit.selectedUser = value;
-                                            });
+                                            if (value != null) {
+                                              setState(() {
+                                                final animateUser = successState
+                                                    .users
+                                                    .firstWhere((element) =>
+                                                        element.uid ==
+                                                        value.uid);
+                                                homeMapCubit.selectedUser =
+                                                    value;
+                                                homeMapCubit
+                                                    .animateCameraSelectedUser(
+                                                        animateUser);
+                                              });
+                                            }
                                           },
                                         )
                                       : Row(
@@ -233,7 +244,9 @@ class _HomeMapPageState extends State<HomeMapPage> {
                         children: [
                           FloatingActionButton(
                             backgroundColor: Colors.white,
-                            onPressed: () => Modular.to.pushNamed('/circles'),
+                            onPressed: () => Modular.to
+                                .pushNamed('/circles')
+                                .then((value) => homeMapCubit.initialize()),
                             child: const Icon(
                               Icons.person_pin_circle_outlined,
                               size: 32,
@@ -264,33 +277,33 @@ class _HomeMapPageState extends State<HomeMapPage> {
                     right: 16,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 38.0),
-                      child: !homeMapCubit.devicePositionStream!.isPaused
+                      child: successState.isStreamingLocation
                           ? FloatingActionButton(
-                              heroTag: 'help',
-                              backgroundColor: Colors.blue,
-                              onPressed: () => setState(() {
-                                homeMapCubit.switchStreamGps();
-                              }),
-                              child: const Icon(
-                                Icons.play_arrow,
-                                size: 32,
-                              ),
-                            )
-                          : FloatingActionButton(
                               heroTag: 'help',
                               backgroundColor:
                                   Theme.of(context).colorScheme.error,
                               onPressed: () => setState(() {
-                                homeMapCubit.switchStreamGps();
+                                homeMapCubit.startPauseGps();
                               }),
                               child: const Icon(
                                 Icons.pause,
                                 size: 32,
                               ),
+                            )
+                          : FloatingActionButton(
+                              heroTag: 'help',
+                              backgroundColor: Colors.blue,
+                              onPressed: () => setState(() {
+                                homeMapCubit.startPauseGps();
+                              }),
+                              child: const Icon(
+                                Icons.play_arrow,
+                                size: 32,
+                              ),
                             ),
                     ),
                   ),
-                  if (homeMapCubit.dropdownUsers.isNotEmpty)
+                  if (homeMapCubit.users.isNotEmpty)
                     ExpandableBottomSheet(
                       background: Container(),
                       persistentHeader: Container(
@@ -405,15 +418,18 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                                           MainAxisAlignment
                                                               .spaceBetween,
                                                       children: [
-                                                        Text(
-                                                          e.name,
-                                                          style:
-                                                              const TextStyle(
-                                                            fontFamily:
-                                                                'Nunito',
-                                                            fontSize: 18,
-                                                            fontWeight:
-                                                                FontWeight.bold,
+                                                        Expanded(
+                                                          child: Text(
+                                                            e.name,
+                                                            style:
+                                                                const TextStyle(
+                                                              fontFamily:
+                                                                  'Nunito',
+                                                              fontSize: 18,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
                                                           ),
                                                         ),
                                                         Row(
@@ -462,8 +478,8 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                                         ),
                                                       ],
                                                     ),
-                                                    Row(
-                                                      children: const [
+                                                    const Row(
+                                                      children: [
                                                         Text(
                                                           'Últ. local.: ',
                                                           style: TextStyle(
@@ -484,8 +500,8 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                                         ),
                                                       ],
                                                     ),
-                                                    Row(
-                                                      children: const [
+                                                    const Row(
+                                                      children: [
                                                         Text(
                                                           'Desde: ',
                                                           style: TextStyle(

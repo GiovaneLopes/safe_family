@@ -22,9 +22,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Text(
               'Verificar email',
               style: TextStyle(fontSize: 22, fontFamily: 'Nunito'),
@@ -108,18 +108,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             child: ElevatedButton(
                               onPressed: () async {
                                 if (formKey.currentState!.validate()) {
-                                  forgotPasswordCubit.recoverPassword(emailController.text);
+                                  forgotPasswordCubit
+                                      .recoverPassword(emailController.text);
                                 }
                               },
                               child: state.runtimeType ==
                                       ForgotPasswordLoadingState
                                   ? const Center(
-                                      child: CircularProgressIndicator(color: Colors.white,),
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
                                     )
-                                  : Row(
+                                  : const Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
-                                      children: const [
+                                      children: [
                                         Icon(Icons.email_outlined),
                                         SizedBox(width: 12),
                                         Text('Recuperar senha'),

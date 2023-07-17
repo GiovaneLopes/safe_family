@@ -48,7 +48,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   void _initializeCameraController() {
-    controller = CameraController(_cameras[1], ResolutionPreset.max);
+    controller = CameraController(
+      _cameras[1],
+      ResolutionPreset.max,
+      imageFormatGroup: ImageFormatGroup.yuv420,
+    );
     controller.initialize().then((_) {
       if (!mounted) {
         return;
@@ -81,9 +85,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
           onPressed: () => Modular.to.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Text(
               'Cadastro',
               style: TextStyle(fontSize: 22, fontFamily: 'Nunito'),
