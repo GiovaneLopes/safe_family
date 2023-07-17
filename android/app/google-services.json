@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "888876599620",
+    "project_id": "safe-lopes-family",
+    "storage_bucket": "safe-lopes-family.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:888876599620:android:7a11757b863e4c0a512f11",
+        "android_client_info": {
+          "package_name": "com.safe_lopes_family.safe_lopes_family"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "888876599620-ro7gvcb1pb5h47988n0jvjogelp3iroj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUNoY986OoclqXUh3zZeXoOSoBzQdTSEg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "888876599620-ro7gvcb1pb5h47988n0jvjogelp3iroj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

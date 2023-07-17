@@ -1,0 +1,78 @@
+name: safe_lopes_family
+description: A new Flutter project.
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.19.2 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  google_maps_flutter: ^2.2.5
+  flutter_config: ^2.0.0
+  expandable_bottom_sheet: ^1.1.1+1
+  dropdown_button2: ^2.0.0
+  flutter_modular: ^5.0.3
+  flutter_bloc: ^8.1.2
+  mask_text_input_formatter: ^2.4.0
+  email_validator: ^2.1.17
+  device_preview: ^1.1.0
+  firebase_auth: ^4.3.0
+  cloud_firestore: ^4.4.5
+  firebase_core: ^2.8.0
+  firebase_database: ^10.0.16
+  asuka: ^2.0.2
+  camera: ^0.10.3+2
+  firebase_storage: ^11.0.16
+  path_provider: ^2.0.14
+  cached_network_image: ^3.2.3
+  firebase_app_check: ^0.1.1+14
+  geolocator: ^9.0.2
+  widgets_to_image: ^0.0.2
+  flutter_cache_manager: ^3.3.0
+  http: ^1.1.0
+  feather_icons: ^1.2.0
+  dartz: ^0.10.1
+  battery_info: ^1.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/launch_icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "assets/images/launch_icon.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  windows:
+    generate: true
+    image_path: "assets/images/launch_icon.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: true
+    image_path: "assets/images/launch_icon.png"
+
+flutter:
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito-Regular.ttf
+  uses-material-design: true
+
+  assets:
+    - assets/
+    - assets/images/
+    - assets/images/launch_icon.png
+    - assets/mapThemes/night_theme.json
+    - .env
