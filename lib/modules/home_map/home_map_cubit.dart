@@ -64,6 +64,7 @@ class HomeMapCubit extends Cubit<HomeMapState> {
       circleResponse.fold((l) => emit(HomeMapErrorState('Erro do servidor')),
           (value) {
         if (value.users.isNotEmpty && value.code.isNotEmpty) {
+          dropdownUsers.clear();
           dropdownUsers = value.users;
           // Listen Circle Users Locations
           listenCircleLocationData(value.code);
@@ -198,6 +199,7 @@ class HomeMapCubit extends Cubit<HomeMapState> {
       if (devicePositionStream!.isPaused) {
         isStreamingLocation = true;
         devicePositionStream!.resume();
+        emit(HomeMapSuccessState(markers, users, isStreamingLocation));
       } else {
         isStreamingLocation = false;
         devicePositionStream!.pause();
@@ -215,8 +217,8 @@ class HomeMapCubit extends Cubit<HomeMapState> {
 
   void animateCameraSelectedUser(UserEntity user) async {
     if (user.latitude != null && user.longitude != null) {}
-    final position =
-        CameraPosition(target: LatLng(user.latitude!, user.longitude!));
+    final position = CameraPosition(
+        target: LatLng(user.latitude!, user.longitude!), zoom: 16);
     mapController!.animateCamera(CameraUpdate.newCameraPosition(position));
   }
 
