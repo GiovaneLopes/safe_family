@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:safe_lopes_family/modules/circles/circles_cubit.dart';
 import 'package:safe_lopes_family/src/widgets/safe_family_text_form_field/safe_family_text_form_field.dart';
+import 'package:share/share.dart';
 
 class CirclesPage extends StatefulWidget {
   const CirclesPage({super.key});
@@ -118,7 +119,9 @@ class _CirclesPageState extends State<CirclesPage> {
                               Row(
                                 children: [
                                   IconButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      Share.share(successState.circle.code);
+                                    },
                                     icon: const Icon(
                                       Icons.share,
                                       color: Colors.blue,
